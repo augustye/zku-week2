@@ -20,7 +20,7 @@ template CheckRoot(n) { // compute the root of a MerkleTree of n Levels
             hash[i].inputs[1] <== leaves[i*2+1];
             nextLevel.leaves[i] <== hash[i].out;
         }
-        root <== nextLevel.out;
+        root <== nextLevel.root;
     }
 }
 

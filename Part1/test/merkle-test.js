@@ -54,13 +54,13 @@ describe("MerkleTree", function () {
         await merkleTree.insertLeaf(1);
         await merkleTree.insertLeaf(2);
 
-        const node8 = (await merkleTree.hashes(8)).toString();
-        const node12 = (await merkleTree.hashes(12)).toString();
+        const node9 = (await merkleTree.hashes(9)).toString();
+        const node13 = (await merkleTree.hashes(13)).toString();
 
         const Input = {
             "leaf": "2",
-            "path_elements": ["1", node8, node12],
-            "path_index": ["1", "1", "1"]
+            "path_elements": ["1", node9, node13],
+            "path_index": ["1", "0", "0"]
         }
         const { proof, publicSignals } = await groth16.fullProve(Input, "circuits/circuit_js/circuit.wasm","circuits/circuit_final.zkey");
 
