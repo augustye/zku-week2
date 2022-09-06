@@ -1,0 +1,46 @@
+<html>
+<head>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/snarkjs@0.3.60/build/snarkjs.min.js"></script>
+    <script>
+        async function test() {
+            const { groth16 } = snarkjs;
+            if(!window.ethereum) return alert("no wallet found")
+
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+            const address = "0xc02aAa39b223Fe8d0A0e5C4F27Ead9083c756cc3";
+            const abi = [{ "inputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "name": "hashes", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "index", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "hashedLeaf", "type": "uint256" } ], "name": "insertLeaf", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "root", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256[2]", "name": "a", "type": "uint256[2]" }, { "internalType": "uint256[2][2]", "name": "b", "type": "uint256[2][2]" }, { "internalType": "uint256[2]", "name": "c", "type": "uint256[2]" }, { "internalType": "uint256[1]", "name": "input", "type": "uint256[1]" } ], "name": "verify", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "uint256[2]", "name": "a", "type": "uint256[2]" }, { "internalType": "uint256[2][2]", "name": "b", "type": "uint256[2][2]" }, { "internalType": "uint256[2]", "name": "c", "type": "uint256[2]" }, { "internalType": "uint256[1]", "name": "input", "type": "uint256[1]" } ], "name": "verifyProof", "outputs": [ { "internalType": "bool", "name": "r", "type": "bool" } ], "stateMutability": "view", "type": "function" } ];
+            const merkleTree = new ethers.Contract(address, abi, provider.getSigner());
+
+            await merkleTree.insertLeaf(1);
+            await merkleTree.insertLeaf(2);
+
+            const node9 = (await merkleTree.hashes(9)).toString();
+            const node13 = (await merkleTree.hashes(13)).toString();
+
+            const Input = {
+                "leaf": "1",
+                "path_elements": ["2", node9, node13],
+                "path_index": ["0", "0", "0"]
+            }
+            const { proof, publicSignals } = await groth16.fullProve(Input, "circuits/circuit_js/circuit.wasm","circuits/circuit_final.zkey");
+
+            const calldata = await groth16.exportSolidityCallData(proof, publicSignals);
+
+            const argv = calldata.replace(/["[\]\s]/g, "").split(',').map(x => BigInt(x).toString());
+
+            const a = [argv[0], argv[1]];
+            const b = [[argv[2], argv[3]], [argv[4], argv[5]]];
+            const c = [argv[6], argv[7]];
+            const input = argv.slice(8);
+
+            await merkleTree.verify(a, b, c, input); 
+        }
+    </script>
+</head>
+<body>
+    <button onclick="test()">Test</button>
+</body>
+</html>
