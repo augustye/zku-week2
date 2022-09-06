@@ -48,7 +48,32 @@ describe("MerkleTree", function () {
         const input = argv.slice(8);
 
         expect(await merkleTree.verify(a, b, c, input)).to.be.true;
-
-        // [bonus] verify the second leaf with the inclusion proof
     });
+
+    it("Insert two new leaves and verify the second leaf in an inclusion proof", async function () {
+        await merkleTree.insertLeaf(1);
+        await merkleTree.insertLeaf(2);
+
+        const node8 = (await merkleTree.hashes(8)).toString();
+        const node12 = (await merkleTree.hashes(12)).toString();
+
+        const Input = {
+            "leaf": "2",
+            "path_elements": ["1", node8, node12],
+            "path_index": ["1", "1", "1"]
+        }
+        const { proof, publicSignals } = await groth16.fullProve(Input, "circuits/circuit_js/circuit.wasm","circuits/circuit_final.zkey");
+
+        const calldata = await groth16.exportSolidityCallData(proof, publicSignals);
+    
+        const argv = calldata.replace(/["[\]\s]/g, "").split(',').map(x => BigInt(x).toString());
+    
+        const a = [argv[0], argv[1]];
+        const b = [[argv[2], argv[3]], [argv[4], argv[5]]];
+        const c = [argv[6], argv[7]];
+        const input = argv.slice(8);
+
+        expect(await merkleTree.verify(a, b, c, input)).to.be.true;
+    });
+
 });
