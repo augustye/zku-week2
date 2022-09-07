@@ -21,7 +21,7 @@
             await merkleTree.deployed();
 
             window.merkleTreeAddress = merkleTree.address;
-            console.log("merkleTree contract address:", window.merkleTreeAddress);
+            document.getElementById("result").innerHTML = "merkleTree contract address:" + window.merkleTreeAddress;
         }
 
         async function insert() {
