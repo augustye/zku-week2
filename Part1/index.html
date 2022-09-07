@@ -1,7 +1,7 @@
 <html>
 <head>
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/snarkjs@0.3.60/build/snarkjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/snarkjs@0.4.26/build/snarkjs.min.js"></script>
     <script>
         window.merkleTreeAddress = "0xB581C9264f59BF0289fA76D61B2D0746dCE3C30D";
         const PoseidonABI = [{"constant":true,"inputs":[{"internalType":"bytes32[2]","name":"input","type":"bytes32[2]"}],"name":"poseidon","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":true,"inputs":[{"internalType":"uint256[2]","name":"input","type":"uint256[2]"}],"name":"poseidon","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"pure","type":"function"}];
@@ -48,15 +48,15 @@
             const { proof, publicSignals } = await groth16.fullProve(Input, "circuits/circuit_js/circuit.wasm","circuits/circuit_final.zkey");
 
             const calldata = await groth16.exportSolidityCallData(proof, publicSignals);
+            document.getElementById("proof").innerHTML = "proof: " + calldata;
 
             const argv = calldata.replace(/["[\]\s]/g, "").split(',').map(x => BigInt(x).toString());
-
             const a = [argv[0], argv[1]];
             const b = [[argv[2], argv[3]], [argv[4], argv[5]]];
             const c = [argv[6], argv[7]];
             const input = argv.slice(8);
-
-            await merkleTree.verify(a, b, c, input); 
+            const result = await merkleTree.verify(a, b, c, input); 
+            document.getElementById("result").innerHTML = "verify result: " + result;
         }
 
         async function init() {
@@ -73,5 +73,7 @@
     <button onclick="deploy()">Deploy</button>
     <button onclick="insert()">Insert Leaves</button>
     <button onclick="verify()">Verify</button>
+    <div id="proof"></div><br>
+    <div id="result"></div><br>
 </body>
 </html>
